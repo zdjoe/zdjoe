@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#10111b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Nova AI — a private, local-first multi-model assistant.">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./style.css">
+  <title>Nova AI</title>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand"><div class="brand-mark">N</div><div><strong>NOVA AI</strong><small>Personal intelligence</small></div></div>
+      <button class="primary full" id="newChat">＋ <span data-i18n="newChat">New chat</span></button>
+      <div class="side-label" data-i18n="history">HISTORY</div>
+      <div id="chatList" class="chat-list"></div>
+      <div class="sidebar-bottom">
+        <button class="nav-button" data-panel="models">◈ <span data-i18n="models">Models</span></button>
+        <button class="nav-button" data-panel="memory">▤ <span data-i18n="memory">Memory</span></button>
+        <button class="nav-button" data-panel="agent">✧ <span data-i18n="agent">Agent workspace</span></button>
+        <button class="nav-button" data-panel="admin">▦ <span data-i18n="dashboard">Dashboard</span></button>
+        <button class="nav-button" data-panel="settings">⚙ <span data-i18n="settings">Settings</span></button>
+      </div>
+      <div class="privacy-note">● <span data-i18n="localNote">Local-first · Your data stays in this browser</span></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <button class="icon-button mobile-only" id="menuBtn" aria-label="Menu">☰</button>
+        <div class="top-title"><span class="status-dot"></span><span id="topStatus" data-i18n="offlineReady">Local workspace</span></div>
+        <div class="top-actions">
+          <select id="languageSelect" aria-label="Language"><option value="en">English</option><option value="nl">Nederlands</option></select>
+          <button class="icon-button" id="themeBtn" aria-label="Toggle theme">◐</button>
+        </div>
+      </header>
+
+      <section id="chatView" class="view active">
+        <div class="model-strip">
+          <div><span class="eyebrow" data-i18n="activeModel">ACTIVE MODEL</span><strong id="activeModelLabel">No model loaded</strong></div>
+          <button class="outline" data-panel="models" data-i18n="manageModels">Manage models</button>
+        </div>
+        <div id="messages" class="messages">
+          <div class="welcome">
+            <div class="welcome-orb">✦</div>
+            <p class="eyebrow">NOVA AI 5.0</p>
+            <h1 data-i18n="welcomeTitle">Your AI. Your models. Your control.</h1>
+            <p data-i18n="welcomeText">Load a local model to start a private conversation.</p>
+            <div class="quick-grid">
+              <button class="quick-prompt" data-prompt="Help me plan a project step by step.">✧ <span data-i18n="quickPlan">Plan a project</span></button>
+              <button class="quick-prompt" data-prompt="Explain a difficult topic in simple language.">◇ <span data-i18n="quickExplain">Explain something</span></button>
+              <button class="quick-prompt" data-prompt="Help me brainstorm creative ideas.">⌘ <span data-i18n="quickIdeas">Brainstorm ideas</span></button>
+            </div>
+          </div>
+        </div>
+        <div class="composer-wrap">
+          <div id="fileChip" class="file-chip hidden"></div>
+          <form id="chatForm" class="composer">
+            <input id="fileInput" type="file" accept=".txt,.md,.csv,.json,.html,.log" hidden>
+            <button type="button" class="tool-button" id="attachBtn" title="Attach text file">＋</button>
+            <textarea id="promptInput" rows="1" data-i18n-placeholder="promptPlaceholder" placeholder="Message Nova..." required></textarea>
+            <button type="button" class="tool-button" id="voiceBtn" title="Voice input">♩</button>
+            <button type="submit" class="send-button" id="sendBtn" aria-label="Send">↑</button>
+          </form>
+          <div class="composer-foot"><span data-i18n="localInference">Local inference · No AI API key</span><span id="charCount">0</span></div>
+        </div>
+      </section>
+
+      <section id="modelsView" class="view">
+        <div class="page-heading"><p class="eyebrow">NOVA CORE</p><h1 data-i18n="modelsTitle">Model library</h1><p data-i18n="modelsDesc">Download open-weight models into this browser and run them locally.</p></div>
+        <div class="notice"><strong data-i18n="deviceNoteTitle">Device compatibility</strong><p data-i18n="deviceNote">Local inference requires WebGPU and enough available memory. A model download can be large. Start with the smallest option on iPhone.</p></div>
+        <div class="card">
+          <label for="modelSelect" data-i18n="chooseModel">Choose a model</label>
+          <select id="modelSelect">
+            <option value="Llama-3.2-1B-Instruct-q4f16_1-MLC">Llama 3.2 1B Instruct · compact</option>
+            <option value="Qwen2.5-0.5B-Instruct-q4f16_1-MLC">Qwen 2.5 0.5B Instruct · compact</option>
+          </select>
+          <div class="button-row"><button class="primary" id="loadModelBtn" data-i18n="loadModel">Load model</button><button class="outline" id="unloadModelBtn" data-i18n="unloadModel">Unload model</button></div>
+          <div class="progress-track"><div id="loadProgress"></div></div>
+          <p id="modelStatus" class="muted" role="status">No model loaded.</p>
+        </div>
+        <div class="card">
+          <h2 data-i18n="modelInfoTitle">How local models work</h2>
+          <ul class="info-list">
+            <li data-i18n="modelInfo1">The first load downloads model files into browser storage.</li>
+            <li data-i18n="modelInfo2">Later loads may reuse cached files.</li>
+            <li data-i18n="modelInfo3">Prompts are processed on this device when local inference is active.</li>
+            <li data-i18n="modelInfo4">Closing the tab stops generation; it does not run as a background service.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="memoryView" class="view">
+        <div class="page-heading"><p class="eyebrow">PERSONALIZATION</p><h1 data-i18n="memoryTitle">Nova memory</h1><p data-i18n="memoryDesc">Information you choose to keep available to future chats on this device.</p></div>
+        <div class="card">
+          <label for="memoryInput" data-i18n="memoryLabel">Your saved memory</label>
+          <textarea id="memoryInput" rows="8" data-i18n-placeholder="memoryPlaceholder" placeholder="Add preferences or useful context..."></textarea>
+          <button class="primary" id="saveMemoryBtn" data-i18n="saveMemory">Save memory</button>
+          <p class="muted" data-i18n="memoryPrivacy">Memory is stored in this browser only. Do not store passwords or sensitive information.</p>
+        </div>
+      </section>
+
+      <section id="agentView" class="view">
+        <div class="page-heading"><p class="eyebrow">TASK AUTOMATION</p><h1 data-i18n="agentTitle">Agent workspace</h1><p data-i18n="agentDesc">Ask Nova to plan a task and use the local tools below. Actions that change data require your confirmation.</p></div>
+        <div class="card">
+          <label for="agentTask" data-i18n="taskLabel">What should Nova help you do?</label>
+          <textarea id="agentTask" rows="3" data-i18n-placeholder="taskPlaceholder" placeholder="Example: Help me organize my study week..."></textarea>
+          <button class="primary" id="planTaskBtn" data-i18n="createPlan">Create a plan with AI</button>
+          <div id="agentPlan" class="agent-plan muted" data-i18n="planWillAppear">Your plan will appear here.</div>
+        </div>
+        <div class="card">
+          <h2 data-i18n="localTools">Local tools</h2>
+          <div class="tool-grid">
+            <button class="tool-card" id="timeTool">◷ <strong data-i18n="timeTool">Show local date and time</strong><small data-i18n="timeToolDesc">Reads the device clock</small></button>
+            <button class="tool-card" id="noteTool">▤ <strong data-i18n="noteTool">Create a note</strong><small data-i18n="noteToolDesc">Saves a note after confirmation</small></button>
+            <button class="tool-card" id="exportTool">⇩ <strong data-i18n="exportTool">Export my data</strong><small data-i18n="exportToolDesc">Download chats, memory and notes</small></button>
+          </div>
+          <div id="toolResult" class="tool-result muted"></div>
+        </div>
+      </section>
+
+      <section id="adminView" class="view">
+        <div class="page-heading"><p class="eyebrow">OWNER CONSOLE</p><h1 data-i18n="dashboardTitle">Local dashboard</h1><p data-i18n="dashboardDesc">Private statistics for this browser profile. This is not a secure multi-user admin system.</p></div>
+        <div class="stats-grid">
+          <div class="stat-card"><span data-i18n="totalChats">Chats</span><strong id="statChats">0</strong></div>
+          <div class="stat-card"><span data-i18n="totalMessages">Messages</span><strong id="statMessages">0</strong></div>
+          <div class="stat-card"><span data-i18n="savedNotes">Saved notes</span><strong id="statNotes">0</strong></div>
+          <div class="stat-card"><span data-i18n="memoryChars">Memory characters</span><strong id="statMemory">0</strong></div>
+        </div>
+        <div class="card">
+          <h2 data-i18n="dataManagement">Data management</h2>
+          <p class="muted" data-i18n="dataManagementDesc">Export a backup before clearing local data. Browser storage can be cleared by iOS or by deleting website data.</p>
+          <div class="button-row"><button class="outline" id="backupBtn" data-i18n="backup">Download backup</button><button class="outline" id="importBtn" data-i18n="importBackup">Restore backup</button><input type="file" id="importInput" accept=".json,application/json" hidden><button class="danger" id="clearBtn" data-i18n="clearData">Clear all local data</button></div>
+        </div>
+      </section>
+
+      <section id="settingsView" class="view">
+        <div class="page-heading"><p class="eyebrow">PREFERENCES</p><h1 data-i18n="settingsTitle">Settings</h1><p data-i18n="settingsDesc">Adjust how Nova communicates with you.</p></div>
+        <div class="card settings-card">
+          <label for="personalitySelect" data-i18n="personality">AI personality</label>
+          <select id="personalitySelect">
+            <option value="helpful">Helpful and balanced</option>
+            <option value="creative">Creative</option>
+            <option value="technical">Technical and precise</option>
+            <option value="tutor">Patient tutor</option>
+          </select>
+          <label for="responseLang" data-i18n="responseLanguage">Response language</label>
+          <select id="responseLang"><option value="auto">Automatic</option><option value="nl">Nederlands</option><option value="en">English</option></select>
+          <label class="check-row"><input type="checkbox" id="speakReplies"> <span data-i18n="speakReplies">Read replies aloud</span></label>
+          <label class="check-row"><input type="checkbox" id="agentConfirm" checked> <span data-i18n="confirmActions">Ask before saving or changing data</span></label>
+          <button class="primary" id="saveSettingsBtn" data-i18n="saveSettings">Save settings</button>
+        </div>
+        <div class="card"><h2 data-i18n="privacyTitle">Privacy and limitations</h2><p class="muted" data-i18n="privacyText">Chats, memory and notes stay in this browser unless you export or share them. The static version has no accounts, cross-device sync, remote search or always-on server. Never put secrets in a public repository.</p></div>
+      </section>
+    </main>
+  </div>
+  <div id="toast" class="toast" role="status"></div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
